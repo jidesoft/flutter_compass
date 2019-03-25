@@ -11,10 +11,6 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 class FlutterCompassPlugin private constructor(context: Context, sensorType: Int) : EventChannel.StreamHandler {
   private var mAzimuth = 0.0 // degree
   private var newAzimuth = 0.0 // degree
-  private var mPitch = 0.0 // degree
-  private var newPitch = 0.0 // degree
-  private var mRoll = 0.0 // degree
-  private var newRoll = 0.0 // degree
   private var mFilter = 1f
   private var sensorEventListener: SensorEventListener? = null
   private val sensorManager: SensorManager
@@ -52,26 +48,15 @@ class FlutterCompassPlugin private constructor(context: Context, sensorType: Int
       override fun onSensorChanged(event: SensorEvent) {
         // calculate th rotation matrix
         SensorManager.getRotationMatrixFromVector(rMat, event.values)
-        // get the azimuth value (orientation[0]) in degree
-
-        SensorManager.getOrientation(rMat, orientation)
-        newAzimuth = (Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0].toDouble()) + 360) % 360
-
-        SensorManager.remapCoordinateSystem(rMat, SensorManager.AXIS_X, SensorManager.AXIS_Z, arMat)
-        SensorManager.getOrientation(arMat, orientation)
-//                newAzimuth = (Math.toDegrees(orientation[0].toDouble()) + 360) % 360
-        newPitch = (Math.toDegrees(orientation[1].toDouble()) + 360) % 360
-        newRoll = (Math.toDegrees(orientation[2].toDouble()) + 360) % 360
+        newAzimuth = (((Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[0].toDouble()) + 360) % 360 - Math.toDegrees(SensorManager.getOrientation(rMat, orientation)[2].toDouble()) + 360) % 360)
 
         //dont react to changes smaller than the filter value
-        if (Math.abs(mAzimuth - newAzimuth) < mFilter && Math.abs(mPitch - newPitch) < mFilter && Math.abs(mRoll - newRoll) < mFilter) {
+        if (Math.abs(mAzimuth - newAzimuth) < mFilter) {
           return
         }
         mAzimuth = newAzimuth
-        mPitch = newPitch
-        mRoll = newRoll
 
-        events.success(((newAzimuth * 10).toInt() + ((newPitch * 10).toInt() shl 12) + ((newRoll * 10).toInt() shl 24)).toDouble())
+        events.success(newAzimuth.toDouble())
       }
     }
   }
