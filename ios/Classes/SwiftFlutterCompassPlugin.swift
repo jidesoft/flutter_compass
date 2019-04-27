@@ -43,8 +43,21 @@ public class SwiftFlutterCompassPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     public func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         if(newHeading.headingAccuracy>0){
             let heading:CLLocationDirection!;
+            var adjustDegree = 0.0;
+            switch UIDevice.current.orientation{
+                case .portrait:
+                    adjustDegree = 0.0;
+                case .portraitUpsideDown:
+                    adjustDegree = 0.0;
+                case .landscapeLeft:
+                   adjustDegree = -90;
+                case .landscapeRight:
+                   adjustDegree = 90;
+                default:
+                   adjustDegree = 0.0;
+            }
             heading = newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading;
-            eventSink!(heading);
+            eventSink!(heading - adjustDegree);
         }
     }
 }
